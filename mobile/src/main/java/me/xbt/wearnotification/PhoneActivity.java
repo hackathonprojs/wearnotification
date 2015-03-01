@@ -14,13 +14,10 @@ import android.view.MenuItem;
 
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.support.v4.app.NotificationCompat.WearableExtender;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -60,7 +57,7 @@ public class PhoneActivity extends Activity {
                 //createNotificationWithBackground(title, text);
 
                 String imgUrl = "https://fbcdn-profile-a.akamaihd.net/hprofile-ak-xfa1/v/t1.0-1/c37.55.466.466/s200x200/387388_10150523177971125_1830650757_n.jpg?oh=ad59fbefab14ce5ca2d8461d65c6e647&oe=5561FAFA&__gda__=1432590774_de8e7804f69a0a7eeb09bd9077990736";
-                new DownloadImageTask().execute(imgUrl);
+                new DownloadImageTask(title, text).execute(imgUrl);
             }
         });
 
@@ -170,8 +167,9 @@ public class PhoneActivity extends Activity {
      *
      * @param title - notification title
      * @param text - notification text
+     * @param imgUrl - url of the image to be used as notification background
      */
-    private void createNotificationWithBackground(String title, String text) {
+    private void createNotificationWithBackground(String title, String text, String imgUrl) {
         final String EXTRA_EVENT_ID = "extra_event_id";
         String eventId = "003";
         String location = "1600 Amphitheater Parkway, CA"; // map will open on the phone to this location.
@@ -203,7 +201,7 @@ public class PhoneActivity extends Activity {
 
         // only works if you are on a separate thread
         try {
-            URL url = new URL("https://fbcdn-profile-a.akamaihd.net/hprofile-ak-xfa1/v/t1.0-1/c37.55.466.466/s200x200/387388_10150523177971125_1830650757_n.jpg?oh=ad59fbefab14ce5ca2d8461d65c6e647&oe=5561FAFA&__gda__=1432590774_de8e7804f69a0a7eeb09bd9077990736");
+            URL url = new URL(imgUrl);
             Bitmap bmp = BitmapFactory.decodeStream(url.openConnection().getInputStream());
             //imageView.setImageBitmap(bmp);
             notificationBuilder.setLargeIcon(bmp);
@@ -225,25 +223,37 @@ public class PhoneActivity extends Activity {
     }
 
 
+    /**
+     * from http://stackoverflow.com/questions/5776851/load-image-from-url
+     */
     private class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
 
-        public DownloadImageTask() {
+        private String title = null;
+        private String text = null;
+
+        public DownloadImageTask(String title, String text) {
+            this.title = title;
+            this.text = text;
         }
 
         protected Bitmap doInBackground(String... urls) {
-            String urldisplay = urls[0];
-            Bitmap mIcon11 = null;
-            try {
-                InputStream in = new java.net.URL(urldisplay).openStream();
-                mIcon11 = BitmapFactory.decodeStream(in);
-            } catch (Exception e) {
-                Log.e("Error", e.getMessage());
-                e.printStackTrace();
-            }
+//            String urldisplay = urls[0];
+//            Bitmap mIcon11 = null;
+//            try {
+//                InputStream in = new java.net.URL(urldisplay).openStream();
+//                mIcon11 = BitmapFactory.decodeStream(in);
+//            } catch (Exception e) {
+//                Log.e("Error", e.getMessage());
+//                e.printStackTrace();
+//            }
 
-            createNotificationWithBackground("test notification", "test content");
+            String imgUrl = urls[0];
+            createNotificationWithBackground(title, text, imgUrl);
 
-            return mIcon11;
+            // not used, so we return null
+            // if we are downloading an image, we could return the bitmap.
+            // but we don't need this in this case.
+            return null;
         }
 
         protected void onPostExecute(Bitmap result) {
