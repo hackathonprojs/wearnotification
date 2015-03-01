@@ -3,9 +3,12 @@ package me.xbt.wearnotification;
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -14,6 +17,12 @@ import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.app.NotificationCompat.WearableExtender;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 public class PhoneActivity extends Activity {
 
@@ -48,7 +57,10 @@ public class PhoneActivity extends Activity {
             public void onClick(View v) {
                 String title = "notification with background";
                 String text = "should see background image";
-                createNotificationWithBackground(title, text);
+                //createNotificationWithBackground(title, text);
+
+                String imgUrl = "https://fbcdn-profile-a.akamaihd.net/hprofile-ak-xfa1/v/t1.0-1/c37.55.466.466/s200x200/387388_10150523177971125_1830650757_n.jpg?oh=ad59fbefab14ce5ca2d8461d65c6e647&oe=5561FAFA&__gda__=1432590774_de8e7804f69a0a7eeb09bd9077990736";
+                new DownloadImageTask().execute(imgUrl);
             }
         });
 
@@ -182,12 +194,27 @@ public class PhoneActivity extends Activity {
         NotificationCompat.Builder notificationBuilder =
                 new NotificationCompat.Builder(this)
                         .setSmallIcon(R.drawable.ic_launcher)
-                        .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher)) // this will create background image.
+                        //.setLargeIcon(bmp) // this will create background image.
                         .setContentTitle(title)
                         .setContentText(text)
                         .setContentIntent(viewPendingIntent)
                         .addAction(R.drawable.ic_launcher, // can be a different icon
                                 getString(R.string.map), mapPendingIntent);
+
+        // only works if you are on a separate thread
+        try {
+            URL url = new URL("https://fbcdn-profile-a.akamaihd.net/hprofile-ak-xfa1/v/t1.0-1/c37.55.466.466/s200x200/387388_10150523177971125_1830650757_n.jpg?oh=ad59fbefab14ce5ca2d8461d65c6e647&oe=5561FAFA&__gda__=1432590774_de8e7804f69a0a7eeb09bd9077990736");
+            Bitmap bmp = BitmapFactory.decodeStream(url.openConnection().getInputStream());
+            //imageView.setImageBitmap(bmp);
+            notificationBuilder.setLargeIcon(bmp);
+        } catch (MalformedURLException ex) {
+            Log.e("Error", ex.getMessage());
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            Log.e("Error", ex.getMessage());
+            ex.printStackTrace();
+        }
+
 
         // Get an instance of the NotificationManager service
         NotificationManagerCompat notificationManager =
@@ -196,4 +223,32 @@ public class PhoneActivity extends Activity {
         // Build the notification and issues it with notification manager.
         notificationManager.notify(notificationId, notificationBuilder.build());
     }
+
+
+    private class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
+
+        public DownloadImageTask() {
+        }
+
+        protected Bitmap doInBackground(String... urls) {
+            String urldisplay = urls[0];
+            Bitmap mIcon11 = null;
+            try {
+                InputStream in = new java.net.URL(urldisplay).openStream();
+                mIcon11 = BitmapFactory.decodeStream(in);
+            } catch (Exception e) {
+                Log.e("Error", e.getMessage());
+                e.printStackTrace();
+            }
+
+            createNotificationWithBackground("test notification", "test content");
+
+            return mIcon11;
+        }
+
+        protected void onPostExecute(Bitmap result) {
+
+        }
+    }
+
 }
